@@ -2,10 +2,26 @@ package services
 
 import (
 	"github.com/leslesnoa/bookstore_users-api/domain/users"
+	"github.com/leslesnoa/bookstore_users-api/utils/crypto_utils"
 	resterr "github.com/leslesnoa/bookstore_users-api/utils/errors"
 )
 
-func GetUser(userId int64) (*users.User, *resterr.RestErr) {
+var (
+	UsersService usersServiceInterface = &usersService{}
+)
+
+type usersService struct {
+}
+
+type usersServiceInterface interface {
+	GetUser(int64) (*users.User, *resterr.RestErr)
+	CreateUser(users.User) (*users.User, *resterr.RestErr)
+	UpdateUser(bool, users.User) (*users.User, *resterr.RestErr)
+	DeleteUser(int64) *resterr.RestErr
+	Search(string) ([]users.User, *resterr.RestErr)
+}
+
+func (s *usersService) GetUser(userId int64) (*users.User, *resterr.RestErr) {
 	result := &users.User{Id: userId}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -13,12 +29,16 @@ func GetUser(userId int64) (*users.User, *resterr.RestErr) {
 	return result, nil
 }
 
-func CreateUser(user users.User) (*users.User, *resterr.RestErr) {
+func (s *usersService) CreateUser(user users.User) (*users.User, *resterr.RestErr) {
 	// リクエストのバリデーションチェック
 	// err := user.Validate()
 	// if err != nil {
 	// 	return nil, err
 	// }
+
+	user.Status = users.StatusActive
+	user.Password = crypto_utils.GetMd5(user.Password)
+
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
@@ -26,8 +46,8 @@ func CreateUser(user users.User) (*users.User, *resterr.RestErr) {
 	return &user, nil
 }
 
-func UpdateUser(isPartial bool, user users.User) (*users.User, *resterr.RestErr) {
-	current, err := GetUser(user.Id)
+func (s *usersService) UpdateUser(isPartial bool, user users.User) (*users.User, *resterr.RestErr) {
+	current, err := UsersService.GetUser(user.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +80,12 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *resterr.RestErr)
 	return current, nil
 }
 
-func DeleteUser(userId int64) *resterr.RestErr {
+func (s *usersService) DeleteUser(userId int64) *resterr.RestErr {
 	user := &users.User{Id: userId}
 	return user.Delete()
 }
 
-func Search(status string) ([]users.User, *resterr.RestErr) {
+func (s *usersService) Search(status string) ([]users.User, *resterr.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
