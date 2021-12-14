@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	queryInsertUser       = "INSERT INTO users (first_name, last_name, email, date_created) VALUES(?,?,?,?);"
-	queryGetUser          = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
+	queryInsertUser       = "INSERT INTO users (first_name, last_name, email, date_created, status, password) VALUES(?,?,?,?,?,?);"
+	queryGetUser          = "SELECT id, first_name, last_name, email, date_created, status, password FROM users WHERE id=?;"
 	queryUpdateUser       = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
 	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
 	queryFindUserByStatus = "SELECT id, first_name, last_name, email, data_created, status FROM users WHERE status=?;"
@@ -40,7 +40,7 @@ func (user *User) Get() *resterr.RestErr {
 	defer stmt.Close()
 
 	result := stmt.QueryRow()
-	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status, &user.Password); err != nil {
 		return mysql_utils.ParseError(getErr)
 		// MySQLのエラーかどうか確認
 		// sqlErr, ok := getErr.(*mysql.MySQLError)
@@ -78,7 +78,7 @@ func (user *User) Save() *resterr.RestErr {
 
 	user.DateCreated = date_utils.GetNowString()
 
-	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Status, user.Password)
 	if saveErr != nil {
 		return mysql_utils.ParseError(saveErr)
 		// MySQLのエラーかどうか確認

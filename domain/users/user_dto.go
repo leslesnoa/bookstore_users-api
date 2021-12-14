@@ -7,6 +7,10 @@ import (
 	resterr "github.com/leslesnoa/bookstore_users-api/utils/errors"
 )
 
+const (
+	StatusActive = "active"
+)
+
 // ユーザAPIのフィールドを定義
 type User struct {
 	Id          int64  `json:"id"`
@@ -15,7 +19,7 @@ type User struct {
 	Email       string `json:"email"`
 	DateCreated string `json:"date_created"`
 	Status      string `json:"status"`
-	Password    string `json:"-"`
+	Password    string `json:"password"`
 }
 
 // ユーザAPIのバリデーションを定義
@@ -28,6 +32,11 @@ func (user *User) Validate() *resterr.RestErr {
 	if user.Email == "" {
 		// メールが空白の場合エラーを返す
 		return resterr.NewBadRequestError("invalid email address")
+	}
+
+	user.Password = strings.TrimSpace(user.Password)
+	if user.Password == "" {
+		return resterr.NewBadRequestError("invalid pasword")
 	}
 	return nil
 }
